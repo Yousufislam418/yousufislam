@@ -20,13 +20,13 @@ const services = [
           id : 3,
           title : 'Framework',
           image : '../../images/framework.jpg',
-          url : 'https://www.bh-slys.com/bh-slys/layout/framework'
+          url : 'framework.html'
      },
      {  
           id : 4,
           title : 'Components',
           image : '../../images/components.jpg',
-          url : 'https://www.bh-slys.com/bh-slys/layout/components'
+          url : 'components.html'
      }
 ]; 
 
