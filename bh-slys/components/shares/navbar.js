@@ -5,7 +5,7 @@ const brandIcon = "../../images/slys.png";
 const proImg = '../../icons/profile.png';
 
 export const nabItems = `
-   <li class="p-3"><a class="white" href="/">Home</a><li>
+   <li class="p-3"><a class="white" href="home.html">Home</a><li>
    <li class="p-3"><a class="white" href="framework.html">Framework</a><li>
    <li class="p-3"><a class="white" href="components.html">Components</a><li>
    <li class="p-3"><a class="white" href="video.html">Video</a><li>
