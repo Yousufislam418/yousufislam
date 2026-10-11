@@ -23,7 +23,7 @@ export default function BarcodeGenerate(){
   <h2 class="blue fs-30">Barcode Generator</h2>    
  <!----------------------------->
   <div class="m-15">
-   <input type="text" id="barcodeInput" focus class="input text-center" placeholder="Enter barcode text">   
+   <input type="text" id="barcodeInput" class="input text-center" placeholder="Enter barcode text" autofocus>   
    <input type="button" class="btn-sm mt-20" onclick="generate()" value="Generate">   
   </div>
  <!----------------------------->

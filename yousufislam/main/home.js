@@ -1,8 +1,10 @@
-import {NavBar} from "../components/shares/navbar.js";
-import Banner from "../components/home/banner.js";
-import Services from "../components/home/services.js";
-import Visitors from "../components/home/visitors.js";
-import Footer from "../components/shares/footer.js";
+import "../../Components/components.js";
+import "../../Framework/framework.js";
+import Banner from "../components/banner.js";
+import Footer from "../components/footer.js";
+import {NavBar} from "../components/navbar.js";
+import Services from "../components/services.js";
+import Visitors from "../components/visitors.js";
 
 function Home(eve) {
  const display = document.getElementById('yousuf');
@@ -10,8 +12,8 @@ function Home(eve) {
 }
 
 Home(NavBar());
-// Home(Banner());
 Home(Services());
+Home(Banner());
 Home(Visitors());
 
 Home(Footer());

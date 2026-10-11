@@ -25,7 +25,7 @@ export default function QRCodeGenerate(){
   <h2 class="blue fs-30">QR code generator</h2>    
  <!----------------------------->
   <div class="m-12">
-   <input type="text" id="qrcodeInput" focus class="input text-center" placeholder="Enter qrcode text">   
+   <input type="text" id="qrcodeInput" class="input text-center" placeholder="Enter qrcode text" autofocus>   
    <input type="button" class="btn-sm mt-15" onclick="makeQR()" value="Generate">   
   </div>
  <!----------------------------->
