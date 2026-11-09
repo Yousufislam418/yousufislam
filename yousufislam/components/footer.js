@@ -13,9 +13,9 @@ const secondContent = `
   <li>8565</li>`;
 
 export default function Footer(){
- return(`
+ return (`
  <section class="bg-5">
-  <div class="wp-95 d-flex justify-space-evenly">
+  <div class="">
    <div class="d-flex justify-evenly pt-50 pb-30">
     <div class="p-15"><ul class="list-none">${firstContent}</ul></div>
     <div class="p-10"><ul class="list-none">${secondContent}</ul></div>
@@ -28,5 +28,7 @@ export default function Footer(){
   </div>
   </div>
  <section>
- `);
+ `); 
+ 
+
 }
