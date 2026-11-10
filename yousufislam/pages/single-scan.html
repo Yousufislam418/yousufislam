@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offline Barcode Scanner</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f3f5f7; color: #202124; }
+  main { max-width: 620px; margin: auto; }
+  h2 { margin-top: 0; }
+  .panel { background: white; padding: 14px; border-radius: 12px; margin: 12px 0; box-shadow: 0 1px 5px #0001; }
+  button, input { font: inherit; padding: 12px; border-radius: 8px; }
+  button { border: 0; background: #1769aa; color: white; margin: 4px 4px 4px 0; }
+  button.secondary { background: #59636e; }
+  button.danger { background: #b3261e; }
+  input { width: 100%; border: 1px solid #aeb4bb; margin: 6px 0; }
+  video { width: 100%; max-height: 340px; background: #111; border-radius: 8px; }
+  .item { background: #f3f5f7; padding: 10px; border-radius: 8px; margin: 7px 0; overflow-wrap: anywhere; }
+  .muted { color: #5f6368; font-size: 14px; }
+  #status { font-weight: bold; } 
+  #navs {background-color: #5f6368; display: flex; gap: 20px;} 
+  #navs > h2 {margin-left: 13px;}
+</style>
+</head>
+<body>
+<main>
+
+ <section id="navs">
+   <h2>Offline Barcode Scanner</h2>
+   <a href="home.html">Home</a>
+ </section>
+
+  <section class="panel">
+    <video id="video" playsinline muted></video>
+    <p id="status" class="muted">Camera বন্ধ আছে</p>
+    <button id="startCamera">Start Camera</button>
+    <button id="stopCamera" class="secondary">Stop Camera</button>
+    <p class="muted">Camera scanning-এর জন্য browser-এ BarcodeDetector API থাকতে হবে এবং পেজটি HTTPS বা localhost থেকে খুলতে হবে।</p>
+  </section>
+
+  <section class="panel">
+    <label for="barcodeInput"><b>Barcode input</b></label>
+    <input id="barcodeInput" type="text" placeholder="Scanner দিয়ে scan করুন অথবা লিখুন" autocomplete="off">
+    <button id="addButton">Add Data</button>
+    <p class="muted">USB/Bluetooth scanner সাধারণত keyboard-এর মতো কাজ করে। Scan শেষে Enter পাঠালে data নিজে থেকেই যোগ হবে।</p>
+  </section>
+
+  <section class="panel">
+    <h3>Saved Data: <span id="total">0</span></h3>
+    <div id="scanList"></div>
+    <button id="copyButton">Copy All</button>
+    <button id="clearButton" class="danger">Clear All</button>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+const STORAGE_KEY = "ScanData";
+const input = document.getElementById("barcodeInput");
+const video = document.getElementById("video");
+const statusText = document.getElementById("status");
+const list = document.getElementById("scanList");
+const total = document.getElementById("total");
+
+let scanData = loadData();
+let stream = null;
+let detector = null;
+let scanning = false;
+let lastCameraValue = "";
+let lastCameraAt = 0;
+
+function loadData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved.filter(x => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(scanData));
+}
+
+function addBarcode(rawValue, fromCamera = false) {
+  const value = String(rawValue || "").trim();
+  if (!value) return;
+
+  if (scanData.includes(value)) {
+    if (fromCamera) {
+      const now = Date.now();
+      if (lastCameraValue === value && now - lastCameraAt < 2500) return;
+      lastCameraValue = value;
+      lastCameraAt = now;
+    } else {
+      alert("এই Barcode আগে থেকেই আছে!");
+      input.value = "";
+      input.focus();
+    }
+    return;
+  }
+
+  scanData.push(value);
+  saveData();
+  renderData();
+  input.value = "";
+  if (!fromCamera) input.focus();
+  statusText.textContent = "Saved: " + value;
+}
+
+function renderData() {
+  total.textContent = scanData.length;
+  list.replaceChildren();
+
+  scanData.forEach((value, index) => {
+    const row = document.createElement("div");
+    row.className = "item";
+    row.textContent = (index + 1) + ". " + value;
+    list.appendChild(row);
+  });
+}
+
+input.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    addBarcode(input.value);
+  }
+});
+
+document.getElementById("addButton").addEventListener("click", () => addBarcode(input.value));
+
+async function startCamera() {
+  if (scanning) return;
+
+  if (!("BarcodeDetector" in window)) {
+    statusText.textContent = "এই browser-এ Camera BarcodeDetector support নেই। External scanner বা Manual Input ব্যবহার করুন।";
+    alert("এই browser-এ built-in BarcodeDetector নেই। Android Chrome-এর আপডেটেড ভার্সন ব্যবহার করে দেখুন।");
+    return;
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Camera চালাতে HTTPS অথবা localhost প্রয়োজন।");
+    return;
+  }
+
+  try {
+    const supported = await BarcodeDetector.getSupportedFormats();
+    const preferred = ["code_128", "code_39", "ean_13", "ean_8", "upc_a", "upc_e", "qr_code", "itf", "codabar"];
+    const formats = preferred.filter(format => supported.includes(format));
+    detector = new BarcodeDetector({ formats: formats.length ? formats : supported });
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: "environment" } }
+    });
+
+    video.srcObject = stream;
+    await video.play();
+    scanning = true;
+    statusText.textContent = "Camera চালু — Barcode সামনে ধরুন";
+    detectLoop();
+  } catch (error) {
+    statusText.textContent = "Camera চালু করা যায়নি";
+    alert("Camera Error: " + (error.message || error));
+    stopCamera();
+  }
+}
+
+async function detectLoop() {
+  if (!scanning || !detector) return;
+
+  try {
+    if (video.readyState >= 2) {
+      const results = await detector.detect(video);
+      for (const result of results) {
+        if (result.rawValue) addBarcode(result.rawValue, true);
+      }
+    }
+  } catch (error) {
+    // Ignore a single frame detection error and continue scanning.
+  }
+
+  if (scanning) requestAnimationFrame(detectLoop);
+}
+
+function stopCamera() {
+  scanning = false;
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+  }
+  video.pause();
+  video.srcObject = null;
+  statusText.textContent = "Camera বন্ধ আছে";
+}
+
+document.getElementById("startCamera").addEventListener("click", startCamera);
+document.getElementById("stopCamera").addEventListener("click", stopCamera);
+
+async function copyAll() {
+  if (!scanData.length) {
+    alert("কোনো Data নেই!");
+    return;
+  }
+
+  const text = scanData.join("\n");
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      temp.style.position = "fixed";
+      temp.style.opacity = "0";
+      document.body.appendChild(temp);
+      temp.focus();
+      temp.select();
+      const ok = document.execCommand("copy");
+      temp.remove();
+      if (!ok) throw new Error("Copy failed");
+    }
+    alert("সব Data Copy হয়েছে!");
+  } catch {
+    alert("Copy করা যায়নি। Browser clipboard permission পরীক্ষা করুন।");
+  }
+}
+
+document.getElementById("copyButton").addEventListener("click", copyAll);
+
+document.getElementById("clearButton").addEventListener("click", () => {
+  if (!confirm("সব Barcode মুছে ফেলতে চান?")) return;
+  scanData = [];
+  localStorage.removeItem(STORAGE_KEY);
+  renderData();
+});
+
+window.addEventListener("pagehide", stopCamera);
+renderData();
+</script>
+</body>
+</html>

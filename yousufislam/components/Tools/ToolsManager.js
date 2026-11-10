@@ -24,6 +24,10 @@ export function EventHandler() {
   Tools(SingleScan());
  };
  
+ document.getElementById('singleScanImg').onclick = ()=> {
+  location.assign('single-scan.html');
+ };
+ 
  } 
  
 

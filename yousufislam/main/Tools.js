@@ -1,5 +1,5 @@
 import "../../Components/components.js";
-import "../../Framework/framework.js";
+import "../../Framework/framework.js"; 
 
 
 import {NavBar} from "../components/navbar.js";
