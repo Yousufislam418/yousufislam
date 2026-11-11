@@ -1,7 +1,7 @@
 import Tools from "../../main/Tools.js";
 import BarcodeGenerate from "./barcode-generate.js";
 import QRCodeGenerate from "./qrcode-generate.js";
-import SingleScan from "./SingleScan.js";
+import SingleScan, { SingleScanEvent } from "./SingleScan.js";
 
 export default function ToolsManager() { 
  return (`
@@ -22,6 +22,11 @@ export default function ToolsManager() {
 export function EventHandler() {
  document.getElementById('barcodeImg').onclick = ()=> {
   Tools(SingleScan());
+ };
+ 
+ document.getElementById('qrcodeImg').onclick = ()=> {
+  Tools(SingleScan());
+  SingleScanEvent();
  };
  
  document.getElementById('singleScanImg').onclick = ()=> {
