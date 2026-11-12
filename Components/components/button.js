@@ -1,15 +1,15 @@
 export default function Button(elements,classes) {
 //  button large
  if(classes.startsWith("btn-lg")){
-    elements.classList.add("px-30","py-13","clr-navy","ts-1","fs-25","b-0","brs-5","active","cursor-pointer");
+    elements.classList.add("px-30","py-13","clr-navy","ts-1","fs-25","b-0","brs-5","cursor-pointer");
  }
 //  button medium
  if(classes.startsWith("btn-md")){
-    elements.classList.add("px-25","py-10","clr-navy","ts-1","ls-1","fs-20","b-0","brs-5","active","cursor-pointer");
+    elements.classList.add("px-25","py-10","clr-navy","ts-1","ls-1","fs-20","b-0","brs-5","cursor-pointer");
  }
 //  button small
  if(classes.startsWith("btn-sm")){
-    elements.classList.add("px-20","py-8","clr-navy","ts-1","ls-1","fs-18","b-0","brs-5","active","cursor-pointer");
+    elements.classList.add("px-20","py-8","clr-navy","ts-1","ls-1","fs-18","b-0","brs-5","cursor-pointer");
  }
 
 

@@ -11,21 +11,21 @@ export default function SingleScan() {
  </section>
 
   <section class="panel bg-base my-10">
-    <video id="video" playsinline muted></video>
-    <p id="status" class="muted">Camera off</p>
+    <video id="video" class="wp-80 max-h-300" playsinline muted></video>
+    <p id="status" class="my-15 fs-20 clr-blue">Camera off</p>
     <button id="startCamera" class="btn-md btn-primary my-10">Start Camera</button>
     <button id="stopCamera" class="btn-md btn-danger">Stop Camera</button>
   </section>
 
   <section class="panel bg-base my-10">
-    <label for="barcodeInput"><b>Barcode input</b></label>
-    <input id="barcodeInput" class="input class="my-10" type="text" placeholder="Scan or type" autocomplete="off">
-    <button id="addButton" class="btn-md btn-primary">Add Data</button>
+    <label class="mb-15 fs-18">Barcode input</label>
+    <input id="barcodeInput" class="input class="mb-20" type="text" placeholder="Scan or type" autocomplete="off">
+    <button id="addButton" class="btn-md btn-primary mt-20">Add Data</button>
   </section>
 
   <section class="panel bg-base my-10 p-10">
-    <h3 class="fs-20 mb-10">Saved Data: <span id="total">0</span></h3>
-    <div id="scanList" class="p-8 fs-20 bg-gray clr-navy mb-3"></div>
+    <h3 class="fs-20 mb-5">Saved Data: <span id="total">0</span></h3>
+    <div id="scanList" class="p-8 fs-20 mb-20 bg-base clr-navy mb-3"></div>
     <button id="copyButton" class="btn-md btn-primary">Copy All</button>
     <button id="clearButton" class="btn-md btn-danger">Clear All</button>
   </section>
@@ -73,11 +73,11 @@ function addBarcode(rawValue, fromCamera = false) {
   if (scanData.includes(value)) {
     if (fromCamera) {
       const now = Date.now();
-      if (lastCameraValue === value && now - lastCameraAt < 2500) return;
+      if (lastCameraValue === value && now - lastCameraAt < 3000) return;
       lastCameraValue = value;
       lastCameraAt = now;
     } else {
-      alert("এই Barcode আগে থেকেই আছে!");
+      alert("This Barcode Already Added");
       input.value = "";
       input.focus();
     }
@@ -97,9 +97,9 @@ function renderData() {
   list.replaceChildren();
 
   scanData.forEach((value, index) => {
-    const row = document.createElement("div");
-    row.className = "item";
-    row.textContent = (index + 1) + ". " + value;
+    const row = document.createElement("h1");
+    row.className = "item bs-1 my-8 py-5 px-15 brs-3";
+    row.innerHTML = `${index + 1}. <span class="ls-1">${value}</span>`;
     list.appendChild(row);
   });
 }
@@ -117,13 +117,13 @@ async function startCamera() {
   if (scanning) return;
 
   if (!("BarcodeDetector" in window)) {
-    statusText.textContent = "এই browser-এ Camera BarcodeDetector support নেই। External scanner বা Manual Input ব্যবহার করুন।";
-    alert("এই browser-এ built-in BarcodeDetector নেই। Android Chrome-এর আপডেটেড ভার্সন ব্যবহার করে দেখুন।");
+    statusText.textContent = "This browser not Supported Camera BarcodeDetector. You can use External scanner or Manual Input";
+    alert("This browser no built-in BarcodeDetector. Use Update version at Android Chrome");
     return;
   }
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("Camera চালাতে HTTPS অথবা localhost প্রয়োজন।");
+    alert("For Camera use need HTTPS or localhost");
     return;
   }
 
@@ -141,10 +141,10 @@ async function startCamera() {
     video.srcObject = stream;
     await video.play();
     scanning = true;
-    statusText.textContent = "Camera চালু — Barcode সামনে ধরুন";
+    statusText.textContent = "Camera is on — Keep front Barcode";
     detectLoop();
   } catch (error) {
-    statusText.textContent = "Camera চালু করা যায়নি";
+    statusText.textContent = "Not possible to open Camera";
     alert("Camera Error: " + (error.message || error));
     stopCamera();
   }
@@ -175,7 +175,7 @@ function stopCamera() {
   }
   video.pause();
   video.srcObject = null;
-  statusText.textContent = "Camera বন্ধ আছে";
+  statusText.textContent = "Camera have off";
 }
 
 document.getElementById("startCamera").addEventListener("click", startCamera);
@@ -183,7 +183,7 @@ document.getElementById("stopCamera").addEventListener("click", stopCamera);
 
 async function copyAll() {
   if (!scanData.length) {
-    alert("কোনো Data নেই!");
+    alert("Data not found!");
     return;
   }
 
@@ -203,16 +203,16 @@ async function copyAll() {
       temp.remove();
       if (!ok) throw new Error("Copy failed");
     }
-    alert("সব Data Copy হয়েছে!");
+    alert("All Data Coppied");
   } catch {
-    alert("Copy করা যায়নি। Browser clipboard permission পরীক্ষা করুন।");
+    alert("Copy Not Possible - Please check Browser clipboard permission");
   }
 }
 
 document.getElementById("copyButton").addEventListener("click", copyAll);
 
 document.getElementById("clearButton").addEventListener("click", () => {
-  if (!confirm("সব Barcode মুছে ফেলতে চান?")) return;
+  if (!confirm("Are you sure all data Remove ?")) return;
   scanData = [];
   localStorage.removeItem(STORAGE_KEY);
   renderData();
@@ -220,7 +220,6 @@ document.getElementById("clearButton").addEventListener("click", () => {
 
 window.addEventListener("pagehide", stopCamera);
 renderData(); 
-
 
 }
 
