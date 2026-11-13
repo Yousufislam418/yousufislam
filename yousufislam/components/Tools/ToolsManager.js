@@ -1,5 +1,6 @@
 import Tools from "../../main/Tools.js";
 import BarcodeGenerate from "./barcode-generate.js";
+import MultipleScan, { MultipleScanEvent } from "./MultipleScan.js";
 import QRCodeGenerate from "./qrcode-generate.js";
 import SingleScan, { SingleScanEvent } from "./SingleScan.js";
 
@@ -11,6 +12,7 @@ export default function ToolsManager() {
      <li id="barcodeImg" class="list-none cursor-pointer"><img class="w-180 b-10 bc-aqua brs-5" src="../../images/barcode.png"></li>
      <li id="qrcodeImg" class="list-none cursor-pointer"><img class="w-180 b-10 bc-aqua brs-5" src="../../images/qrcode.jpg"></li>
      <li id="singleScanImg" class="list-none cursor-pointer"><img class="w-180 b-10 bc-aqua brs-5" src="../../images/yousuf.jpg"></li>
+     <li id="multipleScanImg" class="list-none cursor-pointer"><img class="w-180 b-10 bc-aqua brs-5" src="../../images/yousuf.jpg"></li>
     </ul>
    </div>
   </section>`); 
@@ -24,13 +26,14 @@ export function EventHandler() {
   Tools(SingleScan());
  };
  
- document.getElementById('qrcodeImg').onclick = ()=> {
+ document.getElementById('singleScanImg').onclick = ()=> {
   Tools(SingleScan());
   SingleScanEvent();
  };
  
- document.getElementById('singleScanImg').onclick = ()=> {
-  location.assign('single-scan.html');
+ document.getElementById('multipleScanImg').onclick = ()=> {
+  Tools(MultipleScan);
+  MultipleScanEvent();
  };
  
  } 
