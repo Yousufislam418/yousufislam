@@ -2,19 +2,25 @@ export default function MultipleScan() {
  return (`
  <section class="pos-absolute left-0 top-0 bg-0 wp-100 min-hp-100">
  <div class="container mx-auto wp-98">
+
 <!--- Part 1 --->
  <div class="d-flex bg-base brs-10 p-10 gap-20 mt-8 items-center">
   <h3 class="m-0 py-5 clr-navy">Multiple Barcode Scanner</h3>
   <a href="tools.html" class="td-none btn-sm btn-warning">Back</a>
  </div>
 
-<!--- Part 2 --->
+<!--- Part 2 - video play here --->
+ <div class="bg-base d-flex justify-center p-10 brs-10 mt-13"> 
+  <div id="scanner"></div>
+ </div> 
+
+<!--- Part 3 --->
  <div class="d-flex justify-space-evenly bg-base p-10 brs-10 mt-13"> 
-  <button id="startCameraScanBtn" class="btn-sm btn-primary">Start Camera Scanner</button>
+  <button id="startCameraScanBtn" class="btn-sm btn-primary">Scan Camera</button>
   <button id="stopScanBtn" class="btn-sm btn-danger">Stop Camera</button>
  </div>
 
-<!--- Part 3 --->
+<!--- Part 4 --->
  <div class="bg-base brs-10 p-10 mt-13">
   <div>
    <input id="barcodeInput" type="text" class="input" placeholder="Enter Barcode" autocomplete="off">
@@ -23,11 +29,6 @@ export default function MultipleScan() {
    <button id="addBarcodeBtn" class="btn-md btn-primary">Add Barcode</button>
   </div>
  </div>
-
-<!--- Part 4 --->
- <div class="bg-base d-flex justify-center p-10 brs-10 mt-13"> 
-  <div id="scanner"></div>
- </div> 
 
 <!--- Part 5 --->
  <div class="bg-base p-10 brs-10 mt-13">
@@ -152,8 +153,8 @@ async function startScanner() {
  await video.play();
 
  document.getElementById("scanner").appendChild(video);
-  video.style.width = "90%";
-  video.style.height = "230px";
+  video.style.width = "93%";
+  video.style.height = "200px";
   scannerActive = true;
   scanCamera(detector);
  } catch (error) {
@@ -232,7 +233,7 @@ function escapeHTML(value) {
 // Copy All Data
 async function copyData() {
  const text = barcodeData.map(item =>
- `${item.barcode},${item.quantity}`
+ `${item.barcode} = ${item.quantity}`
  ).join("\n");
 
  try {
