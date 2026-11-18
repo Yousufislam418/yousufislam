@@ -1,4 +1,5 @@
-import { copyElementByIdInnerText } from "../../function/function.js";
+import Message from "../message.js";
+import MessageTime from "../MessageTime.js"; 
 
 export default function SingleScan() {
  return (`
@@ -7,7 +8,7 @@ export default function SingleScan() {
 <div class="mx-13">
  <section class="navs bg-skyblue d-flex mt-8 items-center gap-10">
    <h2 class="ml-10 p-8 my-5">Offline Barcode Scanner</h2>
-   <a href="home.html" class="btn-sm btn-primary">Home</a>
+   <a href="home.html" class="btn-sm btn-primary td-none">Home</a>
  </section>
 
   <section class="panel bg-base my-10">
@@ -30,6 +31,8 @@ export default function SingleScan() {
     <button id="clearButton" class="btn-md btn-danger">Clear All</button>
   </section>
 </div>
+
+ <div id="messageId"></div>
 
 <!--------------------------------->
 </section>`);   
@@ -76,16 +79,17 @@ function addBarcode(rawValue, fromCamera = false) {
       if (lastCameraValue === value && now - lastCameraAt < 3000) return;
       lastCameraValue = value;
       lastCameraAt = now;
-    } else {
-      alert("This Barcode Already Added");
-      input.value = "";
-      input.focus();
-    }
-    return;
-  }
+ } else {
+   MessageTime("This Barcode Already Added");
+   input.value = "";
+   input.focus();
+ }
+   return;
+ }
 
   scanData.push(value);
-  saveData();
+  saveData(); 
+   MessageTime(value);
   renderData();
   input.value = "";
   if (!fromCamera) input.focus();
@@ -116,36 +120,36 @@ document.getElementById("addButton").addEventListener("click", () => addBarcode(
 async function startCamera() {
   if (scanning) return;
 
-  if (!("BarcodeDetector" in window)) {
+ if (!("BarcodeDetector" in window)) {
     statusText.textContent = "This browser not Supported Camera BarcodeDetector. You can use External scanner or Manual Input";
-    alert("This browser no built-in BarcodeDetector. Use Update version at Android Chrome");
-    return;
-  }
+ Message("This browser no built-in BarcodeDetector. Use Update version at Android Chrome");
+   return;
+ }
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("For Camera use need HTTPS or localhost");
-    return;
-  }
+ if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  MessageTime("For Camera use need HTTPS or localhost");
+  return;
+ }
 
-  try {
-    const supported = await BarcodeDetector.getSupportedFormats();
-    const preferred = ["code_128", "code_39", "ean_13", "ean_8", "upc_a", "upc_e", "qr_code", "itf", "codabar"];
-    const formats = preferred.filter(format => supported.includes(format));
-    detector = new BarcodeDetector({ formats: formats.length ? formats : supported });
+ try {
+ const supported = await BarcodeDetector.getSupportedFormats();
+ const preferred = ["code_128", "code_39", "ean_13", "ean_8", "upc_a", "upc_e", "qr_code", "itf", "codabar"];
+ const formats = preferred.filter(format => supported.includes(format));
+  detector = new BarcodeDetector({ formats: formats.length ? formats : supported });
 
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: { ideal: "environment" } }
-    });
+  stream = await navigator.mediaDevices.getUserMedia({
+  audio: false,
+  video: { facingMode: { ideal: "environment" } }
+ });
 
-    video.srcObject = stream;
-    await video.play();
-    scanning = true;
-    statusText.textContent = "Camera is on — Keep front Barcode";
-    detectLoop();
-  } catch (error) {
+  video.srcObject = stream;
+  await video.play();
+  scanning = true;
+  statusText.textContent = "Camera is on — Keep front Barcode";
+  detectLoop();
+ } catch (error) {
     statusText.textContent = "Not possible to open Camera";
-    alert("Camera Error: " + (error.message || error));
+ MessageTime("Camera Error: " + (error.message || error));
     stopCamera();
   }
 }
@@ -182,31 +186,31 @@ document.getElementById("startCamera").addEventListener("click", startCamera);
 document.getElementById("stopCamera").addEventListener("click", stopCamera);
 
 async function copyAll() {
-  if (!scanData.length) {
-    alert("Data not found!");
-    return;
-  }
+ if (!scanData.length) {
+  MessageTime("Data not found!");
+  return;
+ }
 
-  const text = scanData.join("\n");
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-    } else {
-      const temp = document.createElement("textarea");
-      temp.value = text;
-      temp.style.position = "fixed";
-      temp.style.opacity = "0";
-      document.body.appendChild(temp);
-      temp.focus();
-      temp.select();
-      const ok = document.execCommand("copy");
-      temp.remove();
-      if (!ok) throw new Error("Copy failed");
-    }
-    alert("All Data Coppied");
-  } catch {
-    alert("Copy Not Possible - Please check Browser clipboard permission");
-  }
+ const text = scanData.join("\n");
+ try {
+ if (navigator.clipboard && window.isSecureContext) {
+  await navigator.clipboard.writeText(text); 
+ } else {
+ const temp = document.createElement("textarea");
+   temp.value = text;
+   temp.style.position = "fixed";
+   temp.style.opacity = "0";
+   document.body.appendChild(temp);
+   temp.focus();
+   temp.select();
+   const ok = document.execCommand("copy");
+   temp.remove();
+ if (!ok) throw new Error("Copy failed");
+ }
+  MessageTime("All Data Coppied");
+ } catch (error) { 
+  MessageTime(error.message); 
+ }
 }
 
 document.getElementById("copyButton").addEventListener("click", copyAll);
