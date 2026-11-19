@@ -1,6 +1,6 @@
 export default function MessageTime(sms , time = 3) {
  document.body.insertAdjacentHTML('beforeend',`
-  <section id="messageTimeSection" class="wp-100 z-30 pos-absolute left-0 top-0"> 
+  <section id="messageTimeSection" class="wp-100 z-30 pos-fixed left-0 top-0"> 
    <div class="container d-flex justify-center mt-130">
     <div class="content wp-80"> 
       <div class="text-center"> 

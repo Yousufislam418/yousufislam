@@ -12,7 +12,7 @@ export default function SingleScan() {
  </section>
 
   <section class="panel bg-base my-10">
-    <video id="video" class="wp-80 max-h-300" playsinline muted></video>
+    <div id="videoLoad"></div>
     <p id="status" class="my-15 fs-20 clr-blue">Camera off</p>
     <button id="startCamera" class="btn-md btn-primary my-10">Start Camera</button>
     <button id="stopCamera" class="btn-md btn-danger">Stop Camera</button>
@@ -44,7 +44,8 @@ export function SingleScanEvent() {
 
 const STORAGE_KEY = "ScanData";
 const input = document.getElementById("barcodeInput");
-const video = document.getElementById("video");
+const videoLoad = document.getElementById('videoLoad');
+const video = document.getElementById("video"); 
 const statusText = document.getElementById("status");
 const list = document.getElementById("scanList");
 const total = document.getElementById("total");
@@ -73,12 +74,12 @@ function addBarcode(rawValue, fromCamera = false) {
   const value = String(rawValue || "").trim();
   if (!value) return;
 
-  if (scanData.includes(value)) {
-    if (fromCamera) {
-      const now = Date.now();
-      if (lastCameraValue === value && now - lastCameraAt < 3000) return;
-      lastCameraValue = value;
-      lastCameraAt = now;
+ if (scanData.includes(value)) {
+  if (fromCamera) {
+   const now = Date.now();
+ if (lastCameraValue === value && now - lastCameraAt < 3000) return;
+   lastCameraValue = value;
+   lastCameraAt = now;
  } else {
    MessageTime("This Barcode Already Added");
    input.value = "";
@@ -100,7 +101,7 @@ function renderData() {
   total.textContent = scanData.length;
   list.replaceChildren();
 
-  scanData.forEach((value, index) => {
+  scanData.reverse().forEach((value, index) => {
     const row = document.createElement("h1");
     row.className = "item bs-1 my-8 py-5 px-15 brs-3";
     row.innerHTML = `${index + 1}. <span class="ls-1">${value}</span>`;
@@ -115,14 +116,18 @@ input.addEventListener("keydown", event => {
   }
 });
 
-document.getElementById("addButton").addEventListener("click", () => addBarcode(input.value));
+ document.getElementById("addButton").addEventListener("click", () => addBarcode(input.value));
 
-async function startCamera() {
+async function startCamera() { 
+
+
+  videoLoad.innerHTML = `<video id="video" class="wp-80 max-h-300" playsinline muted></video>`;
+
   if (scanning) return;
 
  if (!("BarcodeDetector" in window)) {
-    statusText.textContent = "This browser not Supported Camera BarcodeDetector. You can use External scanner or Manual Input";
- Message("This browser no built-in BarcodeDetector. Use Update version at Android Chrome");
+   statusText.textContent = "This browser not Supported Camera BarcodeDetector. You can use External scanner or Manual Input";
+   Message("This browser no built-in BarcodeDetector. Use Update version at Android Chrome");
    return;
  }
 
@@ -148,7 +153,7 @@ async function startCamera() {
   statusText.textContent = "Camera is on — Keep front Barcode";
   detectLoop();
  } catch (error) {
-    statusText.textContent = "Not possible to open Camera";
+  statusText.textContent = "Not possible to open Camera";
  MessageTime("Camera Error: " + (error.message || error));
     stopCamera();
   }
