@@ -1,38 +1,66 @@
 import Message from "../message.js";
-import MessageTime from "../MessageTime.js"; 
+import MessageTime from "../MessageTime.js";
 
 export default function SingleScan() {
  return (`
-  <section class="bg-base wp-100 min-hp-100 pos-absolute pb-300 left-0 top-0">
+  <section class="bg-0 wp-100 min-hp-100 pos-absolute pb-300 left-0 top-0">
 <!---------------------------------> 
-<div class="mx-13">
- <section class="navs bg-skyblue d-flex mt-8 items-center gap-10">
-   <h2 class="ml-10 p-8 my-5">Offline Barcode Scanner</h2>
-   <a href="home.html" class="btn-sm btn-primary td-none">Home</a>
- </section>
+<!--- Part 1️⃣ --->
+ <div>
+ <div class="d-flex gap-30 items-center bg-base m-5 brs-5">
+   <h2 class="m-0 p-8">Barcode Scanner</h2> 
+   <a href="tools.html" class="btn-sm btn-warning td-none">Back</a>
+ </div>
+ </div>
+ 
+<!--- Part 2️⃣ --->
+ <div>
+ <div class="bg-base m-5 p-8 brs-3">
+  <div class="d-flex gap-8 items-center p-5 bsw-13"> 
+   <input type="text" id="scannerInput" class="input" placeholder="Scan barcode here" autocomplete="off">
+   <button class="btn-sm btn-danger">Enter</button>
+  </div>
+ </div>
+ </div>
 
-  <section class="panel bg-base my-10">
-    <div id="videoLoad"></div>
-    <p id="status" class="my-15 fs-20 clr-blue">Camera off</p>
-    <button id="startCamera" class="btn-md btn-primary my-10">Start Camera</button>
-    <button id="stopCamera" class="btn-md btn-danger">Stop Camera</button>
-  </section>
+<!--- Part 3️⃣ --->
+ <div>
+ <div class="bg-base m-8 brs-3">
+  <div class="p-10"> 
+  <div id="camera"></div>
+  </div>
+ </div>
+ </div>
 
-  <section class="panel bg-base my-10">
-    <label class="mb-15 fs-18">Barcode input</label>
-    <input id="barcodeInput" class="input class="mb-20" type="text" placeholder="Scan or type" autocomplete="off">
-    <button id="addButton" class="btn-md btn-primary mt-20">Add Data</button>
-  </section>
+<!--- Part 4️⃣ --->
+ <div>
+ <div class="m-8 bg-base brs-3">
+  <div class="d-flex gap-20 items-center p-10"> 
+   <button id="startCameraBtn" class="btn-md btn-primary">Start Camera</button>
+   <button id="stopCameraBtn" class="btn-md btn-danger">Stop Camera</button>
+  </div>
+ </div>
+ </div> 
 
-  <section class="panel bg-base my-10 p-10">
-    <h3 class="fs-20 mb-5">Saved Data: <span id="total">0</span></h3>
-    <div id="scanList" class="p-8 fs-20 mb-20 bg-base clr-navy mb-3"></div>
-    <button id="copyButton" class="btn-md btn-primary">Copy All</button>
-    <button id="clearButton" class="btn-md btn-danger">Clear All</button>
-  </section>
-</div>
+<!--- Part 5️⃣ --->
+ <div>
+ <div class="m-8 bg-base brs-3">
+  <div class="d-flex gap-20 items-center p-10"> 
+  <button id="copyAllBtn" class="btn-md btn-primary">Copy All</button>
+  <button id="clearAllBtn" class="btn-md btn-danger">Clear All</button>
+  </div>
+ </div>
+ </div>
 
- <div id="messageId"></div>
+
+  
+
+  
+
+
+
+  <h3 id="barcodeLength"></h3>
+  <div id="barcodeList"></div>
 
 <!--------------------------------->
 </section>`);   
@@ -42,193 +70,215 @@ export default function SingleScan() {
 
 export function SingleScanEvent() { 
 
-const STORAGE_KEY = "ScanData";
-const input = document.getElementById("barcodeInput");
-const videoLoad = document.getElementById('videoLoad');
-const video = document.getElementById("video"); 
-const statusText = document.getElementById("status");
-const list = document.getElementById("scanList");
-const total = document.getElementById("total");
+//===========================================>
 
-let scanData = loadData();
+const STORAGE_KEY = "singleBarcodes";
+
 let stream = null;
 let detector = null;
 let scanning = false;
-let lastCameraValue = "";
-let lastCameraAt = 0;
+let lastScanTime = 0;
 
-function loadData() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return Array.isArray(saved) ? saved.filter(x => typeof x === "string") : [];
-  } catch {
-    return [];
-  }
-}
+// Elements
+const camera = document.getElementById("camera");
+const startCameraBtn = document.getElementById("startCameraBtn");
+const stopCameraBtn = document.getElementById("stopCameraBtn");
+const copyAllBtn = document.getElementById("copyAllBtn");
+const clearAllBtn = document.getElementById("clearAllBtn");
+const scannerInput = document.getElementById("scannerInput");
 
+// Load existing data
+let barcodes = JSON.parse(
+  localStorage.getItem(STORAGE_KEY) || "[]"
+);
+
+// Save data
 function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(scanData));
-}
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(barcodes)
+  );
+} 
 
-function addBarcode(rawValue, fromCamera = false) {
-  const value = String(rawValue || "").trim();
-  if (!value) return;
+// Display all data
+function displayData() {
+  const list = document.getElementById("barcodeList"); 
+ document.getElementById('barcodeLength').innerHTML = `Barcode List ${barcodes.length}`;
 
- if (scanData.includes(value)) {
-  if (fromCamera) {
-   const now = Date.now();
- if (lastCameraValue === value && now - lastCameraAt < 3000) return;
-   lastCameraValue = value;
-   lastCameraAt = now;
- } else {
-   MessageTime("This Barcode Already Added");
-   input.value = "";
-   input.focus();
- }
-   return;
- }
+  list.innerHTML = "";
 
-  scanData.push(value);
-  saveData(); 
-   MessageTime(value);
-  renderData();
-  input.value = "";
-  if (!fromCamera) input.focus();
-  statusText.textContent = "Saved: " + value;
-}
+  barcodes.reverse().forEach((barcode, index) => {
+    const item = document.createElement("h1");
 
-function renderData() {
-  total.textContent = scanData.length;
-  list.replaceChildren();
+    const number = document.createElement("span");
+    number.textContent = `${index + 1}. `;
 
-  scanData.reverse().forEach((value, index) => {
-    const row = document.createElement("h1");
-    row.className = "item bs-1 my-8 py-5 px-15 brs-3";
-    row.innerHTML = `${index + 1}. <span class="ls-1">${value}</span>`;
-    list.appendChild(row);
+    const code = document.createElement("span");
+    code.textContent = barcode;
+    code.style.cursor = "pointer";
+    code.title = "Click to copy";
+
+    code.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(barcode);
+      MessageTime("Copied! "+ barcode);
+    });
+
+    item.append(number, code);
+    list.appendChild(item);
   });
 }
 
-input.addEventListener("keydown", event => {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    addBarcode(input.value);
+// Add new barcode
+function addBarcode(value) {
+  value = String(value).trim();
+
+  if (!value) return false;
+
+  // Duplicate check
+  if (barcodes.includes(value)) {
+    return false;
+  }
+
+  barcodes.push(value);
+
+   saveData(); 
+   MessageTime(value);
+   displayData();
+
+  return true;
+}
+
+// Copy all barcodes
+copyAllBtn.addEventListener("click", async () => {
+  const text = barcodes.join("\n");
+
+  if (!text) {
+    MessageTime("No barcode available!");
+    return;
+  }
+
+  await navigator.clipboard.writeText(text);
+  MessageTime("All barcodes copied!");
+});
+
+// Clear all
+clearAllBtn.addEventListener("click", () => {
+  if (!confirm("Clear all barcodes?")) return;
+
+  barcodes = [];
+  saveData();
+  displayData();
+});
+
+// Scanner device support
+scannerInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    addBarcode(scannerInput.value);
+    scannerInput.value = "";
   }
 });
 
- document.getElementById("addButton").addEventListener("click", () => addBarcode(input.value));
+// Start Camera
+startCameraBtn.addEventListener("click", async () => {
+  try {
+    if (!("BarcodeDetector" in window)) {
+  MessageTime("BarcodeDetector is not supported in this browser.");
+      return;
+    }
 
-async function startCamera() { 
+    if (scanning) {
+      stopCamera();
+      return;
+    }
 
+    detector = new BarcodeDetector();
 
-  videoLoad.innerHTML = `<video id="video" class="wp-80 max-h-300" playsinline muted></video>`;
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "environment"
+      }
+    });
 
-  if (scanning) return;
+    // Create video dynamically
+    const video = document.createElement("video");
 
- if (!("BarcodeDetector" in window)) {
-   statusText.textContent = "This browser not Supported Camera BarcodeDetector. You can use External scanner or Manual Input";
-   Message("This browser no built-in BarcodeDetector. Use Update version at Android Chrome");
-   return;
- }
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = true;
 
- if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-  MessageTime("For Camera use need HTTPS or localhost");
-  return;
- }
+    video.style.width = "100%";
+    video.style.maxWidth = "300px";
 
- try {
- const supported = await BarcodeDetector.getSupportedFormats();
- const preferred = ["code_128", "code_39", "ean_13", "ean_8", "upc_a", "upc_e", "qr_code", "itf", "codabar"];
- const formats = preferred.filter(format => supported.includes(format));
-  detector = new BarcodeDetector({ formats: formats.length ? formats : supported });
+    camera.innerHTML = "";
+    camera.appendChild(video);
 
-  stream = await navigator.mediaDevices.getUserMedia({
-  audio: false,
-  video: { facingMode: { ideal: "environment" } }
- });
+    video.srcObject = stream;
 
-  video.srcObject = stream;
-  await video.play();
-  scanning = true;
-  statusText.textContent = "Camera is on — Keep front Barcode";
-  detectLoop();
- } catch (error) {
-  statusText.textContent = "Not possible to open Camera";
- MessageTime("Camera Error: " + (error.message || error));
+    await video.play();
+
+    scanning = true;
+    startCameraBtn.textContent = "Stop Camera";
+
+    scanLoop(video);
+
+  } catch (error) {
+    console.error(error);
+  Message("Camera Error: " + error.message);
     stopCamera();
   }
-}
+});
 
-async function detectLoop() {
-  if (!scanning || !detector) return;
-
-  try {
-    if (video.readyState >= 2) {
+// Scan Loop
+async function scanLoop(video) {
+  while (scanning) {
+    try {
       const results = await detector.detect(video);
-      for (const result of results) {
-        if (result.rawValue) addBarcode(result.rawValue, true);
-      }
-    }
-  } catch (error) {
-    // Ignore a single frame detection error and continue scanning.
-  }
 
-  if (scanning) requestAnimationFrame(detectLoop);
+      if (results.length > 0) {
+        const now = Date.now();
+
+        // 3 second delay
+        if (now - lastScanTime >= 3000) {
+
+          const value = results[0].rawValue;
+
+          if (addBarcode(value)) {
+            lastScanTime = now;
+            console.log("New Barcode:", value);
+          } else {
+            // Duplicate barcode
+            lastScanTime = now;
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error("Scan Error:", error);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
 }
 
+// Stop camera
 function stopCamera() {
   scanning = false;
+
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
     stream = null;
   }
-  video.pause();
-  video.srcObject = null;
-  statusText.textContent = "Camera have off";
-}
 
-document.getElementById("startCamera").addEventListener("click", startCamera);
-document.getElementById("stopCamera").addEventListener("click", stopCamera);
+  camera.innerHTML = "";
+  startCameraBtn.textContent = "Start Camera";
+} 
+ stopCameraBtn.addEventListener('click',()=> stopCamera());
 
-async function copyAll() {
- if (!scanData.length) {
-  MessageTime("Data not found!");
-  return;
- }
+// Initial display
+displayData();
 
- const text = scanData.join("\n");
- try {
- if (navigator.clipboard && window.isSecureContext) {
-  await navigator.clipboard.writeText(text); 
- } else {
- const temp = document.createElement("textarea");
-   temp.value = text;
-   temp.style.position = "fixed";
-   temp.style.opacity = "0";
-   document.body.appendChild(temp);
-   temp.focus();
-   temp.select();
-   const ok = document.execCommand("copy");
-   temp.remove();
- if (!ok) throw new Error("Copy failed");
- }
-  MessageTime("All Data Coppied");
- } catch (error) { 
-  MessageTime(error.message); 
- }
-}
 
-document.getElementById("copyButton").addEventListener("click", copyAll);
-
-document.getElementById("clearButton").addEventListener("click", () => {
-  if (!confirm("Are you sure all data Remove ?")) return;
-  scanData = [];
-  localStorage.removeItem(STORAGE_KEY);
-  renderData();
-});
-
-window.addEventListener("pagehide", stopCamera);
-renderData(); 
+//===========================================>
 
 }
 
