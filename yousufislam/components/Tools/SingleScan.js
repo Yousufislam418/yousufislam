@@ -7,7 +7,7 @@ export default function SingleScan() {
 <!---------------------------------> 
 <!--- Part 1️⃣ --->
  <div>
- <div class="d-flex gap-30 items-center bg-base m-5 brs-5">
+ <div class="d-flex gap-30 items-center bg-base m-5 p-3 brs-5">
    <h2 class="m-0 p-8">Barcode Scanner</h2> 
    <a href="tools.html" class="btn-sm btn-warning td-none">Back</a>
  </div>
@@ -27,7 +27,7 @@ export default function SingleScan() {
  <div>
  <div class="bg-base m-8 brs-3">
   <div class="p-10"> 
-  <div id="camera"></div>
+  <div id="videoLoad"></div>
   </div>
  </div>
  </div>
@@ -35,32 +35,35 @@ export default function SingleScan() {
 <!--- Part 4️⃣ --->
  <div>
  <div class="m-8 bg-base brs-3">
-  <div class="d-flex gap-20 items-center p-10"> 
+  <div class="d-flex justify-right mr-20 items-center p-10"> 
    <button id="startCameraBtn" class="btn-md btn-primary">Start Camera</button>
-   <button id="stopCameraBtn" class="btn-md btn-danger">Stop Camera</button>
   </div>
  </div>
  </div> 
 
 <!--- Part 5️⃣ --->
  <div>
+ <div class="m-8 bg-base brs-5">
+  <div class="p-10"> 
+   <div class="d-flex items-center gap-25 mt--13"> 
+    <h1 id="barcodeLength" class="bg-yellow b-1 py-5 px-20 clr-red brs-8"></h1> 
+    <button id="copyAllBtn" class="btn-md btn-primary title-Copy">Copy All</button> 
+   </div>
+   <div id="barcodeList" class="p-10 bsw-10"></div>
+  </div>
+ </div>
+ </div> 
+
+<!--- Part 6️⃣ --->
+ <div>
  <div class="m-8 bg-base brs-3">
-  <div class="d-flex gap-20 items-center p-10"> 
-  <button id="copyAllBtn" class="btn-md btn-primary">Copy All</button>
-  <button id="clearAllBtn" class="btn-md btn-danger">Clear All</button>
+  <div class="d-flex gap-20 justify-space-evenly items-center p-10"> 
+  <button id="clearAllBtn" class="btn-md btn-danger">Clear</button>
   </div>
  </div>
  </div>
 
 
-  
-
-  
-
-
-
-  <h3 id="barcodeLength"></h3>
-  <div id="barcodeList"></div>
 
 <!--------------------------------->
 </section>`);   
@@ -68,10 +71,8 @@ export default function SingleScan() {
 } 
 
 
-export function SingleScanEvent() { 
-
 //===========================================>
-
+export function SingleScanEvent() { 
 const STORAGE_KEY = "singleBarcodes";
 
 let stream = null;
@@ -80,9 +81,8 @@ let scanning = false;
 let lastScanTime = 0;
 
 // Elements
-const camera = document.getElementById("camera");
+const videoLoad = document.getElementById("videoLoad");
 const startCameraBtn = document.getElementById("startCameraBtn");
-const stopCameraBtn = document.getElementById("stopCameraBtn");
 const copyAllBtn = document.getElementById("copyAllBtn");
 const clearAllBtn = document.getElementById("clearAllBtn");
 const scannerInput = document.getElementById("scannerInput");
@@ -102,29 +102,31 @@ function saveData() {
 
 // Display all data
 function displayData() {
-  const list = document.getElementById("barcodeList"); 
- document.getElementById('barcodeLength').innerHTML = `Barcode List ${barcodes.length}`;
+  const barcodeList = document.getElementById("barcodeList"); 
+ document.getElementById('barcodeLength').innerHTML = 
+  `Total items : <span class="bg-red clr-yellow px-20 b-2 bc-white brs-3">${barcodes.length}</span>`;
 
-  list.innerHTML = "";
+  barcodeList.innerHTML = "";
 
-  barcodes.reverse().forEach((barcode, index) => {
-    const item = document.createElement("h1");
+ barcodes.reverse().forEach((barcode, index) => {
+ const h1 = document.createElement("h1");
+ 
+ const number = document.createElement("span");
+  number.textContent = `${index + 1}. `;
 
-    const number = document.createElement("span");
-    number.textContent = `${index + 1}. `;
-
-    const code = document.createElement("span");
-    code.textContent = barcode;
-    code.style.cursor = "pointer";
-    code.title = "Click to copy";
+ const code = document.createElement("span");
+  code.textContent = barcode;
+  code.style.cursor = "pointer";
+  code.title = "Click to copy";
 
     code.addEventListener("click", async () => {
       await navigator.clipboard.writeText(barcode);
       MessageTime("Copied! "+ barcode);
     });
 
-    item.append(number, code);
-    list.appendChild(item);
+    h1.append(number, code); 
+    h1.classList.add('m-3','p-3','clr-blue','cursor-pointer','bb-1','bc-#F5F5F5'); 
+    barcodeList.appendChild(h1);
   });
 }
 
@@ -135,7 +137,8 @@ function addBarcode(value) {
   if (!value) return false;
 
   // Duplicate check
-  if (barcodes.includes(value)) {
+ if (barcodes.includes(value)) { 
+   MessageTime('Already Added '+ value);
     return false;
   }
 
@@ -200,26 +203,20 @@ startCameraBtn.addEventListener("click", async () => {
     });
 
     // Create video dynamically
-    const video = document.createElement("video");
+ const video = document.createElement("video");
+   video.autoplay = true;
+   video.playsInline = true;
+   video.muted = true;
+   video.classList.add('wp-100','h-230','object-fit-cover');
 
-    video.autoplay = true;
-    video.playsInline = true;
-    video.muted = true;
+   videoLoad.innerHTML = "";
+   videoLoad.appendChild(video);
+   video.srcObject = stream;
+   await video.play();
 
-    video.style.width = "100%";
-    video.style.maxWidth = "300px";
-
-    camera.innerHTML = "";
-    camera.appendChild(video);
-
-    video.srcObject = stream;
-
-    await video.play();
-
-    scanning = true;
-    startCameraBtn.textContent = "Stop Camera";
-
-    scanLoop(video);
+   scanning = true;
+  startCameraBtn.textContent = "Stop Camera";
+   scanLoop(video);
 
   } catch (error) {
     console.error(error);
@@ -244,7 +241,6 @@ async function scanLoop(video) {
 
           if (addBarcode(value)) {
             lastScanTime = now;
-            console.log("New Barcode:", value);
           } else {
             // Duplicate barcode
             lastScanTime = now;
@@ -253,7 +249,7 @@ async function scanLoop(video) {
       }
 
     } catch (error) {
-      console.error("Scan Error:", error);
+      Message(error.message);
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -269,10 +265,9 @@ function stopCamera() {
     stream = null;
   }
 
-  camera.innerHTML = "";
+  videoLoad.innerHTML = "";
   startCameraBtn.textContent = "Start Camera";
 } 
- stopCameraBtn.addEventListener('click',()=> stopCamera());
 
 // Initial display
 displayData();

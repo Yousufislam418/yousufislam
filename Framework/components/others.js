@@ -44,6 +44,14 @@ export default function Others(elements,classes){
  if(classes.startsWith("list-")){
    elements.style.listStyle = classes.slice(5);
  }
+// Object fit -> contain - cover
+ if(classes.startsWith("object-fit-")){
+   elements.style.objectFit = classes.slice(11);
+ }
+// Text Title
+ if(classes.startsWith("title-")){
+   elements.title = `${classes.slice(6)}`;
+ }
 
 
 
